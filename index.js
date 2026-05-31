@@ -1,26 +1,18 @@
-const fs = require('fs');
-console.log("==== X-RAY DIAGNOSTICS ====");
-console.log("Root folder sees:", fs.readdirSync(__dirname));
-try {
-    console.log("Models folder sees:", fs.readdirSync(__dirname + '/models'));
-} catch (err) {
-    console.log("WARNING: Cannot find a folder named 'models'!");
-}
-console.log("===========================");
-require('dotenv').config(); 
+require('dotenv').config();
 
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const Url = require('./models/url');
+
+// THE CRITICAL FIX: Looking for Url.js in the main folder 
+// because the models folder doesn't exist on your GitHub repo.
+const Url = require('./Url');
 
 const app = express();
-
-const PORT = process.env.PORT || 3000; 
+const PORT = process.env.PORT || 10000;
 
 app.use(cors());
 app.use(express.json());
-
 
 const MONGO_URI = process.env.MONGO_URI;
 
@@ -28,11 +20,9 @@ mongoose.connect(MONGO_URI)
   .then(() => console.log('Database Connected Successfully, bro!'))
   .catch((err) => console.log('Uh oh, database error:', err));
 
-
 app.get('/', (req, res) => {
   res.send('My Server is Running, bro!');
 });
-
 
 app.post('/shorten', async (req, res) => {
   const { originalUrl } = req.body;
@@ -44,7 +34,6 @@ app.post('/shorten', async (req, res) => {
 
     let existingUrl = await Url.findOne({ originalUrl: originalUrl });
     
-
     const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 
     if (existingUrl) {
@@ -74,7 +63,6 @@ app.post('/shorten', async (req, res) => {
   }
 });
 
-
 app.get('/:shortId', async (req, res) => {
   try {
     const urlData = await Url.findOne({ shortId: req.params.shortId });
@@ -89,7 +77,6 @@ app.get('/:shortId', async (req, res) => {
     res.status(500).json("Server Error");
   }
 });
-
 
 app.listen(PORT, () => {
   console.log(`Server is listening on port ${PORT}`);
